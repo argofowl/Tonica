@@ -15,7 +15,6 @@ final class CircleWheelView: NSView {
         setAccessibilityElement(false)
     }
     required init?(coder: NSCoder) { fatalError() }
-    override var intrinsicContentSize: NSSize { NSSize(width: 380, height: 380) }
     override func layout() { super.layout(); keys.forEach { $0.frame = bounds } }
     func refresh() { keys.forEach { $0.refresh() }; needsDisplay = true }
     // One tracking area for the whole wheel, because every key's frame covers it.
@@ -33,13 +32,17 @@ final class CircleWheelView: NSView {
         let center = NSPoint(x: bounds.midX, y: bounds.midY)
         let title = model.isMinor ? model.slice.minorLabel : model.slice.majorLabel
         let sub = model.isMinor ? "MINOR" : "MAJOR"
-        for (text, size, y, color) in [(title, CGFloat(30), CGFloat(0), NSColor.labelColor), (sub, CGFloat(10), CGFloat(-22), NSColor.secondaryLabelColor)] {
+        let scale = wheelTextScale(min(bounds.width, bounds.height))
+        for (text, size, y, color) in [(title, 30 * scale, CGFloat(0), NSColor.labelColor), (sub, 10 * scale, -22 * scale, NSColor.secondaryLabelColor)] {
             let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size, weight: .semibold), .foregroundColor: color]
             let s = (text as NSString).size(withAttributes: attrs)
             (text as NSString).draw(at: NSPoint(x: center.x - s.width / 2, y: center.y + y - s.height / 2), withAttributes: attrs)
         }
     }
 }
+
+// Labels are tuned for the smallest 380 point wheel and grow more gently than the wheel itself.
+private func wheelTextScale(_ side: CGFloat) -> CGFloat { max(1, 1 + (side / 380 - 1) * 0.6) }
 
 private final class WheelKey: NSButton {
     override var isFlipped: Bool { false }
@@ -94,7 +97,8 @@ private final class WheelKey: NSButton {
         if window?.firstResponder === self {
             NSColor.keyboardFocusIndicatorColor.setStroke(); let p = shape; p.lineWidth = 3; p.stroke()
         }
-        let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: ring == .major ? 17 : 12, weight: selected ? .bold : .medium), .foregroundColor: selected ? NSColor.black : NSColor.labelColor]
+        let size = (ring == .major ? 17 : 12) * wheelTextScale(min(bounds.width, bounds.height))
+        let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size, weight: selected ? .bold : .medium), .foregroundColor: selected ? NSColor.black : NSColor.labelColor]
         let s = (title as NSString).size(withAttributes: attrs)
         let radians = angle * .pi / 180
         let r = (inner + outer) / 2

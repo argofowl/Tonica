@@ -117,7 +117,8 @@ private final class InstrumentNoteButton: NSButton {
         }
         if highlightedNote || isHighlighted {
             accent.withAlphaComponent(root || isHighlighted ? 1 : 0.5).setFill()
-            let marker = guitar ? rect : NSRect(x: bounds.midX - min(10, bounds.width / 2 - 2), y: 22, width: min(20, bounds.width - 4), height: 20)
+            // On a wide fretboard the marker keeps a pill shape instead of filling the whole fret.
+            let marker = guitar ? rect.insetBy(dx: max(0, (rect.width - 40) / 2), dy: 0) : NSRect(x: bounds.midX - min(10, bounds.width / 2 - 2), y: 22, width: min(20, bounds.width - 4), height: 20)
             NSBezierPath(roundedRect: marker, xRadius: guitar ? 7 : 10, yRadius: guitar ? 7 : 10).fill()
         }
         if highlightedNote || (!guitar && !blackKey) || (guitar && fret == 0) {
