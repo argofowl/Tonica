@@ -41,9 +41,10 @@ final class HarmonyViewController: NSViewController {
         keys.attributedStringValue = hint
         let left = stack([heading, wheel, label("Outer ring: major  ·  Inner ring: relative minor", size: 11, secondary: true), nav, relatives, NSView(), keys, settings], spacing: 16)
         left.translatesAutoresizingMaskIntoConstraints = false
-        left.widthAnchor.constraint(equalToConstant: 380).isActive = true
         wheel.widthAnchor.constraint(equalTo: left.widthAnchor).isActive = true
         wheel.heightAnchor.constraint(equalTo: wheel.widthAnchor).isActive = true
+        wheel.widthAnchor.constraint(greaterThanOrEqualToConstant: 380).isActive = true
+        wheel.widthAnchor.constraint(lessThanOrEqualToConstant: 560).isActive = true
 
         let scalePlay = ActionButton("Play scale", symbol: "play.fill") { [weak self] in self?.playScale() }
         copyScaleButton = ActionButton("Copy", symbol: "doc.on.doc") { [weak self] in
@@ -92,16 +93,28 @@ final class HarmonyViewController: NSViewController {
         let document = FlippedView(); scroll.documentView = document
         document.translatesAutoresizingMaskIntoConstraints = false
         details.translatesAutoresizingMaskIntoConstraints = false; document.addSubview(details)
+        // Past a readable width the column centers, so cards, keys and chord buttons keep their proportions.
+        let fillWidth = details.widthAnchor.constraint(equalTo: document.widthAnchor, constant: -18)
+        fillWidth.priority = .init(490) // Below the window's own size, so it never resizes the window.
         NSLayoutConstraint.activate([
             document.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor),
-            details.leadingAnchor.constraint(equalTo: document.leadingAnchor, constant: 2),
-            details.trailingAnchor.constraint(equalTo: document.trailingAnchor, constant: -16),
+            details.leadingAnchor.constraint(greaterThanOrEqualTo: document.leadingAnchor, constant: 2),
+            details.trailingAnchor.constraint(lessThanOrEqualTo: document.trailingAnchor, constant: -16),
+            details.centerXAnchor.constraint(equalTo: document.centerXAnchor, constant: -7),
+            details.widthAnchor.constraint(lessThanOrEqualToConstant: 720), fillWidth,
             details.topAnchor.constraint(equalTo: document.topAnchor),
             details.bottomAnchor.constraint(equalTo: document.bottomAnchor, constant: -24)
         ])
         let separator = NSBox(); separator.boxType = .separator
         for child in [left, separator, scroll] { child.translatesAutoresizingMaskIntoConstraints = false; view.addSubview(child) }
+        // The wheel grows into a larger window, leaving room for the rest of the sidebar and a usable detail column.
+        let wheelFitsHeight = wheel.heightAnchor.constraint(lessThanOrEqualTo: view.heightAnchor, constant: -333)
+        let wheelFitsWidth = wheel.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -560)
+        let wheelGrows = wheel.widthAnchor.constraint(equalToConstant: 560)
+        wheelFitsHeight.priority = .init(999); wheelFitsWidth.priority = .init(999)
+        wheelGrows.priority = .init(495) // Ahead of the detail column filling out, still below the window size.
         NSLayoutConstraint.activate([
+            wheelFitsHeight, wheelFitsWidth, wheelGrows,
             left.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             left.topAnchor.constraint(equalTo: view.topAnchor, constant: 24),
             left.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -24),
