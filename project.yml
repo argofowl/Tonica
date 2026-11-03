@@ -7,7 +7,7 @@ packages:
     from: "2.0.0"
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
-    from: "2.7.1"
+    from: "2.10.1"
 settings:
   base:
     PRODUCT_NAME: Tonica
